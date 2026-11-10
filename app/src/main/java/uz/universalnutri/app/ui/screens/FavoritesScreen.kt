@@ -1,5 +1,7 @@
 package uz.universalnutri.app.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import uz.universalnutri.app.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,9 +35,10 @@ fun FavoritesScreen(
 ) {
     val favorites by vm.favorites.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val addedText = stringResource(R.string.added_to_cart)
 
     if (favorites.isEmpty()) {
-        EmptyState("💛", "No favourites yet", "Tap the heart on a product to save it here.", "Browse products", onGoShopping)
+        EmptyState("💛", stringResource(R.string.fav_empty_title), stringResource(R.string.fav_empty_text), stringResource(R.string.browse_products), onGoShopping)
         return
     }
 
@@ -48,8 +51,8 @@ fun FavoritesScreen(
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             Column(Modifier.padding(bottom = 4.dp)) {
-                Text("Favourites", style = MaterialTheme.typography.headlineMedium)
-                Text("${favorites.size} saved products", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.favourites_title), style = MaterialTheme.typography.headlineMedium)
+                Text(stringResource(R.string.saved_count, favorites.size), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         items(favorites, key = { it.id }) { p ->
@@ -62,7 +65,7 @@ fun FavoritesScreen(
                     vm.addToCart(p.id)
                     scope.launch {
                         snackbar.currentSnackbarData?.dismiss()
-                        snackbar.showSnackbar("${p.name} added to cart")
+                        snackbar.showSnackbar(addedText.format(p.name))
                     }
                 }
             )

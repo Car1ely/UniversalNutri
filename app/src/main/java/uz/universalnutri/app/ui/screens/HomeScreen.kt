@@ -1,5 +1,7 @@
 package uz.universalnutri.app.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import uz.universalnutri.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -58,13 +60,14 @@ import uz.universalnutri.app.ui.theme.NutriLime
 import uz.universalnutri.app.ui.theme.SectionLabel
 
 /** Training goals shown as big tiles on the home screen. */
-private data class Goal(val name: String, val emoji: String, val hint: String)
+// name = key stored in the database (English), label/hint = translated text from strings.xml
+private data class Goal(val name: String, val emoji: String, val label: Int, val hint: Int)
 
 private val goals = listOf(
-    Goal("Muscle gain", "💪", "Mass & strength"),
-    Goal("Weight loss", "🔥", "Lean & dry"),
-    Goal("Endurance", "🏃", "Run longer"),
-    Goal("Health", "🌿", "Every day")
+    Goal("Muscle gain", "💪", R.string.goal_muscle, R.string.goal_muscle_hint),
+    Goal("Weight loss", "🔥", R.string.goal_loss, R.string.goal_loss_hint),
+    Goal("Endurance", "🏃", R.string.goal_endurance, R.string.goal_endurance_hint),
+    Goal("Health", "🌿", R.string.goal_health, R.string.goal_health_hint)
 )
 
 @Composable
@@ -77,6 +80,7 @@ fun HomeScreen(vm: ShopViewModel, snackbar: SnackbarHostState, onProductClick: (
     val favorites by vm.favoriteIds.collectAsStateWithLifecycle()
     val user by vm.currentUser.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val addedText = stringResource(R.string.added_to_cart)   // read here: onClick lambdas are not composable
     val filtering = query.isNotBlank() || selectedCategory != null || selectedGoal != null
 
     LazyVerticalGrid(
@@ -88,9 +92,9 @@ fun HomeScreen(vm: ShopViewModel, snackbar: SnackbarHostState, onProductClick: (
     ) {
         fullWidth {
             Column(Modifier.padding(top = 16.dp)) {
-                Text("Salom, ${user?.fullName?.substringBefore(' ') ?: "athlete"}! 👋",
+                Text(stringResource(R.string.hello, user?.fullName?.substringBefore(' ') ?: stringResource(R.string.athlete)),
                     style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Fuel your goals", style = MaterialTheme.typography.headlineMedium)
+                Text(stringResource(R.string.fuel_goals), style = MaterialTheme.typography.headlineMedium)
                 Spacer(Modifier.height(14.dp))
                 SearchField(query, onChange = { vm.query.value = it })
             }
@@ -100,7 +104,7 @@ fun HomeScreen(vm: ShopViewModel, snackbar: SnackbarHostState, onProductClick: (
         }
         fullWidth {
             Column {
-                Text("YOUR GOAL", style = SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                Text(stringResource(R.string.your_goal), style = SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp, bottom = 10.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     items(goals) { g ->
@@ -114,7 +118,7 @@ fun HomeScreen(vm: ShopViewModel, snackbar: SnackbarHostState, onProductClick: (
         fullWidth {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
-                    CategoryChip("All", "✨", selected = selectedCategory == null) { vm.category.value = null }
+                    CategoryChip(stringResource(R.string.all), "✨", selected = selectedCategory == null) { vm.category.value = null }
                 }
                 items(categories) { c ->
                     CategoryChip(c, categoryStyle(c).emoji, selected = selectedCategory == c) {
@@ -125,9 +129,9 @@ fun HomeScreen(vm: ShopViewModel, snackbar: SnackbarHostState, onProductClick: (
         }
         fullWidth {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (filtering) "Results" else "Popular now", style = MaterialTheme.typography.titleLarge,
+                Text(if (filtering) stringResource(R.string.results) else stringResource(R.string.popular_now), style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f))
-                Text("${products.size} items", style = MaterialTheme.typography.labelLarge,
+                Text(stringResource(R.string.items_count, products.size), style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -137,8 +141,8 @@ fun HomeScreen(vm: ShopViewModel, snackbar: SnackbarHostState, onProductClick: (
                     horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("🔍", fontSize = 48.sp)
                     Spacer(Modifier.height(8.dp))
-                    Text("Nothing found", style = MaterialTheme.typography.titleMedium)
-                    Text("Try another word or reset filters", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.nothing_found), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.try_another), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -152,7 +156,7 @@ fun HomeScreen(vm: ShopViewModel, snackbar: SnackbarHostState, onProductClick: (
                     vm.addToCart(p.id)
                     scope.launch {
                         snackbar.currentSnackbarData?.dismiss()
-                        snackbar.showSnackbar("${p.name} added to cart")
+                        snackbar.showSnackbar(addedText.format(p.name))
                     }
                 }
             )
@@ -168,11 +172,11 @@ private fun SearchField(query: String, onChange: (String) -> Unit) {
     TextField(
         value = query,
         onValueChange = onChange,
-        placeholder = { Text("Search protein, creatine, brand…") },
+        placeholder = { Text(stringResource(R.string.search_hint)) },
         leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
         trailingIcon = {
             if (query.isNotEmpty()) IconButton(onClick = { onChange("") }) {
-                Icon(Icons.Filled.Clear, contentDescription = "Clear")
+                Icon(Icons.Filled.Clear, contentDescription = stringResource(R.string.clear))
             }
         },
         singleLine = true,
@@ -200,9 +204,9 @@ private fun PromoBanner() {
     ) {
         Text("🏋️", fontSize = 84.sp, modifier = Modifier.align(Alignment.CenterEnd))
         Column(Modifier.fillMaxWidth(0.68f)) {
-            Text("NEW MEMBER OFFER", style = SectionLabel, color = Color.White.copy(alpha = 0.85f))
+            Text(stringResource(R.string.new_member), style = SectionLabel, color = Color.White.copy(alpha = 0.85f))
             Spacer(Modifier.height(6.dp))
-            Text("−10% on your first order", color = Color.White, fontSize = 22.sp,
+            Text(stringResource(R.string.first_order_offer), color = Color.White, fontSize = 22.sp,
                 fontWeight = FontWeight.Black, lineHeight = 26.sp)
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -214,7 +218,7 @@ private fun PromoBanner() {
                     color = NutriLime, fontWeight = FontWeight.Black, letterSpacing = 1.sp
                 )
                 Spacer(Modifier.width(10.dp))
-                Text("Free delivery\nfrom 500 000", color = Color.White, fontSize = 11.sp, lineHeight = 13.sp)
+                Text(stringResource(R.string.free_delivery_from), color = Color.White, fontSize = 11.sp, lineHeight = 13.sp)
             }
         }
     }
@@ -239,8 +243,8 @@ private fun GoalTile(goal: Goal, selected: Boolean, onClick: () -> Unit) {
             contentAlignment = Alignment.Center
         ) { Text(goal.emoji, fontSize = 20.sp) }
         Spacer(Modifier.height(10.dp))
-        Text(goal.name, color = fg, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
-        Text(goal.hint, color = fg.copy(alpha = 0.65f), style = MaterialTheme.typography.labelSmall)
+        Text(stringResource(goal.label), color = fg, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text(stringResource(goal.hint), color = fg.copy(alpha = 0.65f), style = MaterialTheme.typography.labelSmall)
     }
 }
 

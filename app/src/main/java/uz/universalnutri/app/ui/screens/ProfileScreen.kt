@@ -1,5 +1,7 @@
 package uz.universalnutri.app.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import uz.universalnutri.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +25,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AdminPanelSettings
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.remember
+import uz.universalnutri.app.ui.appLanguages
+import uz.universalnutri.app.ui.currentAppLanguage
+import uz.universalnutri.app.ui.setAppLanguage
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -41,6 +50,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import uz.universalnutri.app.data.OrderStatus
 import uz.universalnutri.app.data.OrderWithItems
 import uz.universalnutri.app.ui.ShopViewModel
+import uz.universalnutri.app.ui.goalLabel
+import uz.universalnutri.app.ui.localizedError
+import uz.universalnutri.app.ui.paymentLabel
 import uz.universalnutri.app.ui.components.InfoTile
 import uz.universalnutri.app.ui.components.OrderStatusChip
 import uz.universalnutri.app.ui.theme.BrandGradient
@@ -84,22 +96,22 @@ fun ProfileScreen(
                         Text(user?.email ?: "", color = Color.White.copy(alpha = 0.85f),
                             style = MaterialTheme.typography.bodyMedium)
                         user?.let {
-                            Text("Member since ${formatDate(it.createdAt).substringBefore(' ')}",
+                            Text(stringResource(R.string.member_since, formatDate(it.createdAt).substringBefore(' ')),
                                 color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.labelSmall)
                         }
                     }
                     IconButton(onClick = { vm.logout(); onLoggedOut() }) {
-                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Log out", tint = Color.White)
+                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = stringResource(R.string.log_out), tint = Color.White)
                     }
                 }
             }
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                InfoTile("${orders.size}", "orders", Modifier.weight(1f))
+                InfoTile("${orders.size}", stringResource(R.string.stat_orders), Modifier.weight(1f))
                 val spent = orders.filter { it.order.status != OrderStatus.CANCELLED }.sumOf { it.order.total }
-                InfoTile(formatSom(spent).removeSuffix(" so'm"), "so'm spent", Modifier.weight(1f))
-                InfoTile("${favorites.size}", "favourites", Modifier.weight(1f), onClick = onOpenFavorites)
+                InfoTile(formatSom(spent).removeSuffix(" so'm"), stringResource(R.string.stat_spent), Modifier.weight(1f))
+                InfoTile("${favorites.size}", stringResource(R.string.stat_favourites), Modifier.weight(1f), onClick = onOpenFavorites)
             }
         }
         if (user?.isAdmin == true) {
@@ -114,9 +126,9 @@ fun ProfileScreen(
                             tint = MaterialTheme.colorScheme.onSecondary)
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
-                            Text("Admin panel", color = MaterialTheme.colorScheme.onSecondary,
+                            Text(stringResource(R.string.admin_panel), color = MaterialTheme.colorScheme.onSecondary,
                                 style = MaterialTheme.typography.titleMedium)
-                            Text("Add and edit products, prices and stock",
+                            Text(stringResource(R.string.admin_panel_hint),
                                 color = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.7f),
                                 style = MaterialTheme.typography.labelMedium)
                         }
@@ -125,7 +137,20 @@ fun ProfileScreen(
             }
         }
         item {
-            Text("ORDER HISTORY", style = SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            // app language: Auto (like the phone) / English / Русский / O‘zbekcha
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.language), style = SectionLabel,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+                val current = remember { currentAppLanguage() }
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    appLanguages.forEach { (tag, name) ->
+                        FilterChip(selected = current == tag, onClick = { setAppLanguage(tag) }, label = { Text(name) })
+                    }
+                }
+            }
+        }
+        item {
+            Text(stringResource(R.string.order_history), style = SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp))
         }
         if (orders.isEmpty()) {
@@ -134,8 +159,8 @@ fun ProfileScreen(
                     Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(48.dp))
                     Spacer(Modifier.height(8.dp))
-                    Text("No orders yet", style = MaterialTheme.typography.titleMedium)
-                    Text("Your orders will appear here", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.no_orders), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.no_orders_text), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -154,7 +179,7 @@ private fun OrderCard(o: OrderWithItems, onClick: () -> Unit) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Order #${o.order.id}", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.order_number, o.order.id), style = MaterialTheme.typography.titleMedium)
                     Text(formatDate(o.order.createdAt), style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -176,7 +201,7 @@ private fun OrderCard(o: OrderWithItems, onClick: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("${o.order.paymentMethod} · ${o.order.address}", style = MaterialTheme.typography.labelMedium,
+                Text("${paymentLabel(o.order.paymentMethod)} · ${o.order.address}", style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, modifier = Modifier.weight(1f))
                 Text(formatSom(o.order.total), fontWeight = FontWeight.ExtraBold)
             }

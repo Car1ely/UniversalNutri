@@ -1,5 +1,9 @@
 package uz.universalnutri.app.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import uz.universalnutri.app.ui.translateError
+import uz.universalnutri.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -55,6 +59,9 @@ import kotlinx.coroutines.launch
 import uz.universalnutri.app.data.Order
 import uz.universalnutri.app.data.OrderStatus
 import uz.universalnutri.app.ui.ShopViewModel
+import uz.universalnutri.app.ui.goalLabel
+import uz.universalnutri.app.ui.localizedError
+import uz.universalnutri.app.ui.paymentLabel
 import uz.universalnutri.app.ui.components.OrderStatusChip
 import uz.universalnutri.app.ui.theme.NutriSale
 import uz.universalnutri.app.ui.theme.SectionLabel
@@ -73,6 +80,7 @@ fun OrderDetailScreen(
     val data by remember(orderId) { vm.order(orderId) }.collectAsStateWithLifecycle(null)
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current      // for texts inside click handlers
     var askCancel by rememberSaveable { mutableStateOf(false) }
     var busy by rememberSaveable { mutableStateOf(false) }
 
@@ -91,16 +99,16 @@ fun OrderDetailScreen(
     if (askCancel) {
         AlertDialog(
             onDismissRequest = { askCancel = false },
-            title = { Text("Cancel order #${order.id}?") },
-            text = { Text("The products will go back to the store. This cannot be undone.") },
+            title = { Text(stringResource(R.string.cancel_order_q, order.id)) },
+            text = { Text(stringResource(R.string.cancel_order_text)) },
             confirmButton = {
                 TextButton(onClick = {
                     askCancel = false
                     busy = true
-                    vm.cancelOrder(order.id) { err -> busy = false; show(err ?: "Order cancelled") }
-                }) { Text("Cancel order", color = MaterialTheme.colorScheme.error) }
+                    vm.cancelOrder(order.id) { err -> busy = false; show(err?.let { translateError(ctx, it) } ?: ctx.getString(R.string.order_cancelled)) }
+                }) { Text(stringResource(R.string.cancel_order), color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { askCancel = false }) { Text("Keep it") } }
+            dismissButton = { TextButton(onClick = { askCancel = false }) { Text(stringResource(R.string.keep_it)) } }
         )
     }
 
@@ -119,12 +127,12 @@ fun OrderDetailScreen(
                 Surface(onClick = onBack, shape = CircleShape, color = MaterialTheme.colorScheme.surface,
                     shadowElevation = 2.dp, modifier = Modifier.size(44.dp)) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("Order #${order.id}", style = MaterialTheme.typography.headlineSmall)
+                    Text(stringResource(R.string.order_number, order.id), style = MaterialTheme.typography.headlineSmall)
                     Text(formatDate(order.createdAt), style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -134,7 +142,7 @@ fun OrderDetailScreen(
             StatusTimeline(order)
 
             // ---------- items ----------
-            Text("ITEMS", style = SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.items_label), style = SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Column(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
@@ -165,16 +173,16 @@ fun OrderDetailScreen(
             // ---------- bill ----------
             Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    BillRow("Subtotal", formatSom(order.subtotal))
-                    if (order.discount > 0) BillRow("Discount ${order.promoCode ?: ""}", "−${formatSom(order.discount)}", NutriSale)
-                    BillRow("Delivery", if (order.delivery == 0L) "Free" else formatSom(order.delivery))
+                    BillRow(stringResource(R.string.subtotal), formatSom(order.subtotal))
+                    if (order.discount > 0) BillRow(stringResource(R.string.discount_fmt, order.promoCode ?: ""), "−${formatSom(order.discount)}", NutriSale)
+                    BillRow(stringResource(R.string.delivery), if (order.delivery == 0L) stringResource(R.string.free) else formatSom(order.delivery))
                     HorizontalDivider(Modifier.padding(vertical = 4.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Total", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                        Text(stringResource(R.string.total), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                         Text(formatSom(order.total), fontSize = 20.sp, fontWeight = FontWeight.Black)
                     }
                     Spacer(Modifier.height(4.dp))
-                    Text("💳 ${order.paymentMethod}   📍 ${order.address}   📞 ${order.phone}",
+                    Text("💳 ${paymentLabel(order.paymentMethod)}   📍 ${order.address}   📞 ${order.phone}",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -185,18 +193,18 @@ fun OrderDetailScreen(
                 Button(
                     onClick = {
                         busy = true
-                        vm.markDelivered(order.id) { err -> busy = false; show(err ?: "Thank you! Enjoy your order 💪") }
+                        vm.markDelivered(order.id) { err -> busy = false; show(err?.let { translateError(ctx, it) } ?: ctx.getString(R.string.enjoy_order)) }
                     },
                     enabled = !busy,
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth().height(54.dp)
-                ) { Text("I received the order", fontSize = 16.sp) }
+                ) { Text(stringResource(R.string.received_order), fontSize = 16.sp) }
                 OutlinedButton(
                     onClick = { askCancel = true },
                     enabled = !busy,
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth().height(54.dp)
-                ) { Text("Cancel order", color = MaterialTheme.colorScheme.error, fontSize = 16.sp) }
+                ) { Text(stringResource(R.string.cancel_order), color = MaterialTheme.colorScheme.error, fontSize = 16.sp) }
             }
             OutlinedButton(
                 onClick = {
@@ -204,9 +212,9 @@ fun OrderDetailScreen(
                         scope.launch {
                             snackbar.currentSnackbarData?.dismiss()
                             if (added == 0) {
-                                snackbar.showSnackbar("These products are out of stock right now")
+                                snackbar.showSnackbar(ctx.getString(R.string.out_of_stock_now))
                             } else {
-                                val r = snackbar.showSnackbar("$added item(s) added to cart", actionLabel = "Open cart")
+                                val r = snackbar.showSnackbar(ctx.getString(R.string.added_items, added), actionLabel = ctx.getString(R.string.open_cart))
                                 if (r == SnackbarResult.ActionPerformed) onOpenCart()
                             }
                         }
@@ -217,7 +225,7 @@ fun OrderDetailScreen(
             ) {
                 Icon(Icons.Filled.Replay, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Buy again", fontSize = 16.sp)
+                Text(stringResource(R.string.buy_again), fontSize = 16.sp)
             }
         }
     }
@@ -235,7 +243,8 @@ private fun BillRow(label: String, value: String, valueColor: Color = Color.Unsp
 @Composable
 private fun StatusTimeline(order: Order) {
     val cancelled = order.status == OrderStatus.CANCELLED
-    val steps = if (cancelled) listOf("Placed", "Cancelled") else listOf("Placed", "On the way", "Delivered")
+    val steps = if (cancelled) listOf(stringResource(R.string.step_placed), stringResource(R.string.step_cancelled))
+    else listOf(stringResource(R.string.step_placed), stringResource(R.string.step_on_way), stringResource(R.string.step_delivered))
     val reached = when (order.status) {
         OrderStatus.DELIVERED -> 3
         OrderStatus.CANCELLED -> 2

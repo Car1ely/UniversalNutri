@@ -1,5 +1,7 @@
 package uz.universalnutri.app.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import uz.universalnutri.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -53,6 +55,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import uz.universalnutri.app.data.CartLine
 import uz.universalnutri.app.ui.ShopViewModel
+import uz.universalnutri.app.ui.goalLabel
+import uz.universalnutri.app.ui.localizedError
+import uz.universalnutri.app.ui.paymentLabel
 import uz.universalnutri.app.ui.components.EmptyState
 import uz.universalnutri.app.ui.components.ProductImage
 import uz.universalnutri.app.ui.components.QuantityStepper
@@ -85,7 +90,7 @@ fun CartScreen(vm: ShopViewModel, onOrderPlaced: (Long) -> Unit, onGoShopping: (
     var placing by rememberSaveable { mutableStateOf(false) }
 
     if (lines.isEmpty()) {
-        EmptyState("🛒", "Your cart is empty", "Add some protein and let's go!", "Go shopping", onGoShopping)
+        EmptyState("🛒", stringResource(R.string.cart_empty_title), stringResource(R.string.cart_empty_text), stringResource(R.string.go_shopping), onGoShopping)
         return
     }
 
@@ -99,8 +104,8 @@ fun CartScreen(vm: ShopViewModel, onOrderPlaced: (Long) -> Unit, onGoShopping: (
     ) {
         item {
             Row(verticalAlignment = Alignment.Bottom) {
-                Text("My cart", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-                Text("${lines.sumOf { it.quantity }} items", style = MaterialTheme.typography.labelLarge,
+                Text(stringResource(R.string.my_cart), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.items_count, lines.sumOf { it.quantity }), style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -115,7 +120,7 @@ fun CartScreen(vm: ShopViewModel, onOrderPlaced: (Long) -> Unit, onGoShopping: (
 
         // ---------- promo code ----------
         item {
-            Section("PROMO CODE") {
+            Section(stringResource(R.string.promo_section)) {
                 if (appliedPromo != null) {
                     Row(
                         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
@@ -125,10 +130,10 @@ fun CartScreen(vm: ShopViewModel, onOrderPlaced: (Long) -> Unit, onGoShopping: (
                         Icon(Icons.Filled.LocalOffer, contentDescription = null,
                             tint = MaterialTheme.colorScheme.onTertiaryContainer)
                         Spacer(Modifier.width(10.dp))
-                        Text("$appliedPromo applied · −${formatSom(bill.discount)}", fontWeight = FontWeight.Bold,
+                        Text(stringResource(R.string.promo_applied, appliedPromo ?: "", formatSom(bill.discount)), fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onTertiaryContainer, modifier = Modifier.weight(1f))
                         IconButton(onClick = { vm.removePromo() }, modifier = Modifier.size(28.dp)) {
-                            Icon(Icons.Filled.Close, contentDescription = "Remove promo code")
+                            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.remove_promo))
                         }
                     }
                 } else {
@@ -150,31 +155,31 @@ fun CartScreen(vm: ShopViewModel, onOrderPlaced: (Long) -> Unit, onGoShopping: (
                             enabled = promoInput.isNotBlank(),
                             shape = RoundedCornerShape(14.dp),
                             modifier = Modifier.height(56.dp)
-                        ) { Text("Apply") }
+                        ) { Text(stringResource(R.string.apply)) }
                     }
-                    promoError?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                    promoError?.let { Text(localizedError(it) ?: it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 }
             }
         }
 
         // ---------- delivery ----------
         item {
-            Section("DELIVERY") {
+            Section(stringResource(R.string.delivery_section)) {
                 OutlinedTextField(
                     value = address, onValueChange = { address = it; error = null },
-                    label = { Text("Address") },
-                    placeholder = { Text("Tashkent, Yunusobod 4, house 12") },
+                    label = { Text(stringResource(R.string.address)) },
+                    placeholder = { Text(stringResource(R.string.address_hint)) },
                     leadingIcon = { Icon(Icons.Filled.Home, contentDescription = null) },
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = phone, onValueChange = { phone = it; error = null },
-                    label = { Text("Phone") },
+                    label = { Text(stringResource(R.string.phone)) },
                     leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
                     singleLine = true,
                     isError = phone.length > 6 && !phoneOk,
-                    supportingText = if (phone.length > 6 && !phoneOk) { { Text("Format: +998 90 123 45 67") } } else null,
+                    supportingText = if (phone.length > 6 && !phoneOk) { { Text(stringResource(R.string.phone_format)) } } else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -184,7 +189,7 @@ fun CartScreen(vm: ShopViewModel, onOrderPlaced: (Long) -> Unit, onGoShopping: (
 
         // ---------- payment ----------
         item {
-            Section("PAYMENT") {
+            Section(stringResource(R.string.payment_section)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     paymentMethods.forEach { m ->
                         PaymentTile(m, selected = payment == m.name, modifier = Modifier.weight(1f)) { payment = m.name }
@@ -198,19 +203,19 @@ fun CartScreen(vm: ShopViewModel, onOrderPlaced: (Long) -> Unit, onGoShopping: (
             Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.secondary) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     val onCard = MaterialTheme.colorScheme.onSecondary
-                    SummaryRow("Subtotal", formatSom(bill.subtotal), onCard)
-                    if (bill.discount > 0) SummaryRow("Discount ${bill.promoCode}", "−${formatSom(bill.discount)}", NutriSaleLight)
-                    SummaryRow("Delivery", if (bill.delivery == 0L) "Free" else formatSom(bill.delivery), onCard)
+                    SummaryRow(stringResource(R.string.subtotal), formatSom(bill.subtotal), onCard)
+                    if (bill.discount > 0) SummaryRow(stringResource(R.string.discount_fmt, bill.promoCode ?: ""), "−${formatSom(bill.discount)}", NutriSaleLight)
+                    SummaryRow(stringResource(R.string.delivery), if (bill.delivery == 0L) stringResource(R.string.free) else formatSom(bill.delivery), onCard)
                     if (bill.delivery > 0) {
-                        Text("Add ${formatSom(Pricing.FREE_DELIVERY_FROM - (bill.subtotal - bill.discount))} more for free delivery",
+                        Text(stringResource(R.string.free_delivery_left, formatSom(Pricing.FREE_DELIVERY_FROM - (bill.subtotal - bill.discount))),
                             style = MaterialTheme.typography.labelSmall, color = onCard.copy(alpha = 0.6f))
                     }
                     HorizontalDivider(color = onCard.copy(alpha = 0.15f), modifier = Modifier.padding(vertical = 4.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Total", color = onCard, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                        Text(stringResource(R.string.total), color = onCard, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                         Text(formatSom(bill.total), color = onCard, fontSize = 22.sp, fontWeight = FontWeight.Black)
                     }
-                    error?.let { Text(it, color = NutriSaleLight, style = MaterialTheme.typography.bodyMedium) }
+                    error?.let { Text(localizedError(it) ?: it, color = NutriSaleLight, style = MaterialTheme.typography.bodyMedium) }
                     Button(
                         onClick = {
                             placing = true
@@ -225,10 +230,10 @@ fun CartScreen(vm: ShopViewModel, onOrderPlaced: (Long) -> Unit, onGoShopping: (
                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(56.dp)
                     ) {
                         if (placing) CircularProgressIndicator(Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
-                        else Text("Place order · ${formatSom(bill.total)}", fontSize = 16.sp)
+                        else Text(stringResource(R.string.place_order, formatSom(bill.total)), fontSize = 16.sp)
                     }
                     if (!canOrder && !placing) {
-                        Text("Enter the address and a valid phone to continue",
+                        Text(stringResource(R.string.fill_address_phone),
                             style = MaterialTheme.typography.labelSmall, color = onCard.copy(alpha = 0.6f))
                     }
                 }
@@ -270,7 +275,7 @@ private fun PaymentTile(method: PaymentMethod, selected: Boolean, modifier: Modi
         Column(Modifier.padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(method.emoji, fontSize = 20.sp)
             Spacer(Modifier.height(2.dp))
-            Text(method.name, style = MaterialTheme.typography.labelLarge,
+            Text(paymentLabel(method.name), style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
         }
     }
@@ -300,13 +305,13 @@ private fun CartRow(line: CartLine, onPlus: () -> Unit, onMinus: () -> Unit, onR
                         style = MaterialTheme.typography.titleSmall)
                 }
                 if (line.quantity > line.product.stock) {
-                    Text(if (line.product.stock == 0) "Sold out — remove it" else "Only ${line.product.stock} in stock",
+                    Text(if (line.product.stock == 0) stringResource(R.string.sold_out_remove) else stringResource(R.string.only_in_stock, line.product.stock),
                         color = NutriSale, style = MaterialTheme.typography.labelSmall)
                 }
             }
             Box(Modifier.align(Alignment.Top)) {
                 IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Remove",
+                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.remove),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                 }
             }

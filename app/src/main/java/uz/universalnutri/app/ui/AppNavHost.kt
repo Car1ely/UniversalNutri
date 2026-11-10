@@ -1,5 +1,7 @@
 package uz.universalnutri.app.ui
 
+import androidx.compose.ui.res.stringResource
+import uz.universalnutri.app.R
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -72,13 +74,13 @@ object Routes {
     fun adminEdit(id: Long) = "admin/edit/$id"
 }
 
-private data class Tab(val route: String, val label: String, val icon: ImageVector)
+private data class Tab(val route: String, val label: Int, val icon: ImageVector)
 
 private val tabs = listOf(
-    Tab(Routes.HOME, "Shop", Icons.Filled.Home),
-    Tab(Routes.FAVORITES, "Saved", Icons.Filled.Favorite),
-    Tab(Routes.CART, "Cart", Icons.Filled.ShoppingCart),
-    Tab(Routes.PROFILE, "Profile", Icons.Filled.Person)
+    Tab(Routes.HOME, R.string.tab_shop, Icons.Filled.Home),
+    Tab(Routes.FAVORITES, R.string.tab_saved, Icons.Filled.Favorite),
+    Tab(Routes.CART, R.string.tab_cart, Icons.Filled.ShoppingCart),
+    Tab(Routes.PROFILE, R.string.tab_profile, Icons.Filled.Person)
 )
 
 @Composable
@@ -118,7 +120,7 @@ fun AppNavHost(vm: ShopViewModel) {
                         NavigationBarItem(
                             selected = currentRoute == tab.route,
                             onClick = { nav.navigateToTab(tab.route) },
-                            label = { Text(tab.label) },
+                            label = { Text(stringResource(tab.label)) },
                             icon = {
                                 if (badge > 0) {
                                     BadgedBox(badge = { Badge { Text("$badge") } }) { Icon(tab.icon, null) }

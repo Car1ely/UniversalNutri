@@ -1,7 +1,7 @@
 package uz.universalnutri.app
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -11,7 +11,7 @@ import uz.universalnutri.app.ui.AppNavHost
 import uz.universalnutri.app.ui.ShopViewModel
 import uz.universalnutri.app.ui.theme.UniversalNutriTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private val vm: ShopViewModel by viewModels { ShopViewModel.Factory }
 
     override fun onCreate(savedInstanceState: Bundle?) {

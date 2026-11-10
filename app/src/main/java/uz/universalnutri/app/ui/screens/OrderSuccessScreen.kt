@@ -1,5 +1,7 @@
 package uz.universalnutri.app.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import uz.universalnutri.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +41,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import uz.universalnutri.app.ui.ShopViewModel
+import uz.universalnutri.app.ui.goalLabel
+import uz.universalnutri.app.ui.localizedError
+import uz.universalnutri.app.ui.paymentLabel
 import uz.universalnutri.app.ui.theme.BrandGradient
 import uz.universalnutri.app.ui.theme.NutriGraphite
 import uz.universalnutri.app.ui.theme.NutriLime
@@ -69,9 +74,9 @@ fun OrderSuccessScreen(vm: ShopViewModel, orderId: Long, onMyOrders: () -> Unit,
             }
         }
         Spacer(Modifier.height(24.dp))
-        Text("Order placed!", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Black)
+        Text(stringResource(R.string.order_placed), color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Black)
         Spacer(Modifier.height(6.dp))
-        Text("Thank you! Our courier will call you before delivery.", color = Color.White.copy(alpha = 0.9f),
+        Text(stringResource(R.string.courier_call), color = Color.White.copy(alpha = 0.9f),
             textAlign = TextAlign.Center)
         Spacer(Modifier.height(28.dp))
 
@@ -79,7 +84,7 @@ fun OrderSuccessScreen(vm: ShopViewModel, orderId: Long, onMyOrders: () -> Unit,
             Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Order #${o.order.id}", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.order_number, o.order.id), style = MaterialTheme.typography.titleLarge)
                     o.items.forEach {
                         Row {
                             Text("${it.emoji}  ${it.quantity}× ${it.productName}", modifier = Modifier.weight(1f),
@@ -89,17 +94,17 @@ fun OrderSuccessScreen(vm: ShopViewModel, orderId: Long, onMyOrders: () -> Unit,
                     }
                     if (o.order.discount > 0) {
                         Row {
-                            Text("Discount ${o.order.promoCode}", modifier = Modifier.weight(1f),
+                            Text(stringResource(R.string.discount_fmt, o.order.promoCode ?: ""), modifier = Modifier.weight(1f),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text("−${formatSom(o.order.discount)}", color = MaterialTheme.colorScheme.error)
                         }
                     }
                     Row {
-                        Text("Delivery", modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(if (o.order.delivery == 0L) "Free" else formatSom(o.order.delivery))
+                        Text(stringResource(R.string.delivery), modifier = Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(if (o.order.delivery == 0L) stringResource(R.string.free) else formatSom(o.order.delivery))
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Total · ${o.order.paymentMethod}", modifier = Modifier.weight(1f),
+                        Text(stringResource(R.string.total_payment, paymentLabel(o.order.paymentMethod)), modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.titleMedium)
                         Text(formatSom(o.order.total), fontSize = 20.sp, fontWeight = FontWeight.Black)
                     }
@@ -115,7 +120,7 @@ fun OrderSuccessScreen(vm: ShopViewModel, orderId: Long, onMyOrders: () -> Unit,
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = NutriGraphite, contentColor = Color.White),
             modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) { Text("My orders", fontSize = 16.sp) }
+        ) { Text(stringResource(R.string.my_orders), fontSize = 16.sp) }
         Spacer(Modifier.height(10.dp))
         OutlinedButton(
             onClick = onContinue,
@@ -123,6 +128,6 @@ fun OrderSuccessScreen(vm: ShopViewModel, orderId: Long, onMyOrders: () -> Unit,
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
             border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(brush = androidx.compose.ui.graphics.SolidColor(Color.White)),
             modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) { Text("Continue shopping", fontSize = 16.sp) }
+        ) { Text(stringResource(R.string.continue_shopping), fontSize = 16.sp) }
     }
 }

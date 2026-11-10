@@ -30,6 +30,12 @@ Login · Register · Home (поиск, цели, категории, сетка)
 - В корзину нельзя положить больше, чем есть на складе
 - Один отзыв от пользователя на товар (1–5 звёзд)
 
+## Языки
+English · Русский · O‘zbekcha. Все тексты в `res/values*/strings.xml`. Язык меняется в Профиль → Язык (или по языку телефона). Ошибки из слоя данных переводятся в `ui/UiText.kt`.
+
+## Release APK
+Ключ подписи и пароли хранятся вне git (`keystore.properties` + `.jks`). Если файл есть: `./gradlew assembleRelease` → `app/build/outputs/apk/release/app-release.apk`. Без него проект всё равно собирается, только release будет неподписанным.
+
 ## Как запустить
 1. Android Studio → **File → Open** → папка `UniversalNutri`, дождаться «Gradle sync finished».
 2. **Build → Make Project** — сборка без ошибок.

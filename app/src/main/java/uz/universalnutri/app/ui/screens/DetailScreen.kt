@@ -1,5 +1,9 @@
 package uz.universalnutri.app.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import uz.universalnutri.app.ui.translateError
+import uz.universalnutri.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -59,6 +63,9 @@ import kotlinx.coroutines.launch
 import uz.universalnutri.app.data.Product
 import uz.universalnutri.app.data.Review
 import uz.universalnutri.app.ui.ShopViewModel
+import uz.universalnutri.app.ui.goalLabel
+import uz.universalnutri.app.ui.localizedError
+import uz.universalnutri.app.ui.paymentLabel
 import uz.universalnutri.app.ui.components.StarPicker
 import uz.universalnutri.app.ui.theme.NutriStar
 import uz.universalnutri.app.util.formatDate
@@ -88,6 +95,7 @@ fun DetailScreen(
     var writingReview by rememberSaveable { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val ctx = LocalContext.current      // for texts inside click handlers
     var quantity by rememberSaveable { mutableIntStateOf(1) }
 
     val p = product
@@ -107,7 +115,7 @@ fun DetailScreen(
                     done(err)
                     if (err == null) {
                         writingReview = false
-                        scope.launch { snackbar.showSnackbar("Thanks for your review!") }
+                        scope.launch { snackbar.showSnackbar(ctx.getString(R.string.review_thanks)) }
                     }
                 }
             }
@@ -136,7 +144,7 @@ fun DetailScreen(
                             vm.addToCart(p.id, quantity)
                             scope.launch {
                                 snackbar.currentSnackbarData?.dismiss()
-                                val r = snackbar.showSnackbar("$quantity × ${p.name} added", actionLabel = "Open cart")
+                                val r = snackbar.showSnackbar(ctx.getString(R.string.added_qty, quantity, p.name), actionLabel = ctx.getString(R.string.open_cart))
                                 if (r == androidx.compose.material3.SnackbarResult.ActionPerformed) onOpenCart()
                             }
                             quantity = 1
@@ -147,7 +155,7 @@ fun DetailScreen(
                     ) {
                         Icon(Icons.Filled.ShoppingCart, contentDescription = null, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text(if (p.stock > 0) "Add · ${formatSom(p.price * quantity)}" else "Sold out",
+                        Text(if (p.stock > 0) stringResource(R.string.add_price, formatSom(p.price * quantity)) else stringResource(R.string.sold_out),
                             fontSize = 15.sp, maxLines = 1)
                     }
                 }
@@ -177,7 +185,7 @@ fun DetailScreen(
                     Surface(onClick = onBack, shape = CircleShape, color = MaterialTheme.colorScheme.surface,
                         shadowElevation = 2.dp, modifier = Modifier.size(44.dp)) {
                         Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
                     }
                     Spacer(Modifier.weight(1f))
@@ -196,7 +204,7 @@ fun DetailScreen(
                     Spacer(Modifier.height(6.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RatingRow(p.rating, p.reviews)
-                        Text("  ·  ${p.category}  ·  ${p.goal}", style = MaterialTheme.typography.labelMedium,
+                        Text("  ·  ${p.category}  ·  ${goalLabel(p.goal)}", style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -207,10 +215,10 @@ fun DetailScreen(
 
                 // ---------- facts ----------
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (p.proteinPerServing > 0) InfoTile("${p.proteinPerServing} g", "protein", Modifier.weight(1f))
-                    InfoTile("${p.servings}", "servings", Modifier.weight(1f))
-                    InfoTile(p.weight, "size", Modifier.weight(1f))
-                    InfoTile(formatSom(p.price / p.servings).removeSuffix(" so'm"), "so'm / serv.", Modifier.weight(1f))
+                    if (p.proteinPerServing > 0) InfoTile("${p.proteinPerServing} g", stringResource(R.string.fact_protein), Modifier.weight(1f))
+                    InfoTile("${p.servings}", stringResource(R.string.fact_servings), Modifier.weight(1f))
+                    InfoTile(p.weight, stringResource(R.string.fact_size), Modifier.weight(1f))
+                    InfoTile(formatSom(p.price / p.servings).removeSuffix(" so'm"), stringResource(R.string.fact_per_serving), Modifier.weight(1f))
                 }
 
                 if (p.flavor != "—") {
@@ -222,14 +230,14 @@ fun DetailScreen(
                         Text("👅", fontSize = 20.sp)
                         Spacer(Modifier.width(10.dp))
                         Column {
-                            Text("FLAVOUR", style = SectionLabel, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Text(stringResource(R.string.flavour_label), style = SectionLabel, color = MaterialTheme.colorScheme.onPrimaryContainer)
                             Text(p.flavor, style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer)
                         }
                     }
                 }
 
-                Text("ABOUT", style = SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.about_label), style = SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(p.description, style = MaterialTheme.typography.bodyLarge, lineHeight = 24.sp)
 
                 Row(
@@ -240,32 +248,32 @@ fun DetailScreen(
                     Icon(Icons.Filled.LocalShipping, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        "Delivery across Tashkent in 2–4 hours. Free from ${formatSom(Pricing.FREE_DELIVERY_FROM)}.",
+                        stringResource(R.string.delivery_info, formatSom(Pricing.FREE_DELIVERY_FROM)),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
 
                 // ---------- reviews ----------
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
-                    Text("REVIEWS · ${reviews.size}", style = SectionLabel,
+                    Text(stringResource(R.string.reviews_count, reviews.size), style = SectionLabel,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
                     if (!alreadyReviewed) {
                         TextButton(onClick = { writingReview = true }) {
                             Icon(Icons.Filled.RateReview, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Write a review")
+                            Text(stringResource(R.string.write_review))
                         }
                     }
                 }
                 if (reviews.isEmpty()) {
-                    Text("No reviews from our customers yet — be the first!",
+                    Text(stringResource(R.string.no_reviews),
                         style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 reviews.forEach { r -> ReviewCard(r) }
 
                 // ---------- similar products ----------
                 if (similar.isNotEmpty()) {
-                    Text("YOU MAY ALSO LIKE", style = SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Text(stringResource(R.string.similar_label), style = SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 6.dp))
                     Row(
                         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -331,17 +339,17 @@ private fun ReviewDialog(
     var sending by rememberSaveable { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Rate $productName", maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        title = { Text(stringResource(R.string.rate_fmt, productName), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             val err = error
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 StarPicker(stars) { stars = it }
                 OutlinedTextField(
                     value = text, onValueChange = { text = it; error = null },
-                    placeholder = { Text("Taste, mixability, results…") },
+                    placeholder = { Text(stringResource(R.string.review_hint)) },
                     minLines = 3,
                     isError = err != null,
-                    supportingText = if (err != null) { { Text(err) } } else null,
+                    supportingText = if (err != null) { { Text(localizedError(err) ?: err) } } else null,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -353,18 +361,18 @@ private fun ReviewDialog(
                     sending = true
                     onSubmit(stars, text) { err -> sending = false; error = err }
                 }
-            ) { Text("Publish") }
+            ) { Text(stringResource(R.string.publish)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }
 
 @Composable
 private fun StockPill(stock: Int) {
     val (text, ok) = when {
-        stock == 0 -> "Sold out" to false
-        stock < 10 -> "Only $stock left" to false
-        else -> "In stock" to true
+        stock == 0 -> stringResource(R.string.sold_out) to false
+        stock < 10 -> stringResource(R.string.only_left, stock) to false
+        else -> stringResource(R.string.in_stock) to true
     }
     Row(
         Modifier

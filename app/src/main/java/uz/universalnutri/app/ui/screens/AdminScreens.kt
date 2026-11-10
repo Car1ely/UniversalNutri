@@ -1,5 +1,7 @@
 package uz.universalnutri.app.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import uz.universalnutri.app.R
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +60,9 @@ import kotlinx.coroutines.flow.flowOf
 import uz.universalnutri.app.data.Product
 import uz.universalnutri.app.data.SampleData
 import uz.universalnutri.app.ui.ShopViewModel
+import uz.universalnutri.app.ui.goalLabel
+import uz.universalnutri.app.ui.localizedError
+import uz.universalnutri.app.ui.paymentLabel
 import uz.universalnutri.app.ui.components.ProductImage
 import uz.universalnutri.app.ui.theme.NutriSale
 import uz.universalnutri.app.util.Validators
@@ -73,7 +78,7 @@ fun AdminScreen(vm: ShopViewModel, onBack: () -> Unit, onEdit: (Long) -> Unit) {
             ExtendedFloatingActionButton(
                 onClick = { onEdit(0L) },
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("New product") },
+                text = { Text(stringResource(R.string.new_product)) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.navigationBarsPadding()
@@ -86,7 +91,7 @@ fun AdminScreen(vm: ShopViewModel, onBack: () -> Unit, onEdit: (Long) -> Unit) {
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             item {
-                ScreenHeader("Admin panel", "${products.size} products · ${products.count { it.stock == 0 }} sold out", onBack)
+                ScreenHeader(stringResource(R.string.admin_panel), stringResource(R.string.products_summary, products.size, products.count { it.stock == 0 }), onBack)
             }
             items(products, key = { it.id }) { p ->
                 Surface(
@@ -105,12 +110,12 @@ fun AdminScreen(vm: ShopViewModel, onBack: () -> Unit, onEdit: (Long) -> Unit) {
                                 color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                         }
                         Text(
-                            if (p.stock == 0) "0 pcs" else "${p.stock} pcs",
+                            stringResource(R.string.pcs, p.stock),
                             fontWeight = FontWeight.Bold,
                             color = if (p.stock == 0) NutriSale else MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(Modifier.width(8.dp))
-                        Icon(Icons.Filled.Edit, contentDescription = "Edit",
+                        Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                     }
                 }
@@ -199,7 +204,7 @@ fun ProductEditScreen(vm: ShopViewModel, productId: Long, onDone: () -> Unit) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        ScreenHeader(if (isNew) "New product" else "Edit product", if (isNew) "Fill in the card" else "#$productId", onDone)
+        ScreenHeader(if (isNew) stringResource(R.string.new_product) else stringResource(R.string.edit_product), if (isNew) stringResource(R.string.fill_card) else "#$productId", onDone)
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -208,33 +213,33 @@ fun ProductEditScreen(vm: ShopViewModel, productId: Long, onDone: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) { Text(emoji.ifBlank { "📦" }, fontSize = 36.sp) }
             Spacer(Modifier.width(12.dp))
-            FormField(emoji, { emoji = it.take(4) }, "Emoji (picture)", Modifier.weight(1f))
+            FormField(emoji, { emoji = it.take(4) }, stringResource(R.string.emoji_label), Modifier.weight(1f))
         }
-        FormField(name, { name = it }, "Name *")
-        FormField(brand, { brand = it }, "Brand *")
-        FormField(category, { category = it }, "Category *")
+        FormField(name, { name = it }, stringResource(R.string.name_req))
+        FormField(brand, { brand = it }, stringResource(R.string.brand_req))
+        FormField(category, { category = it }, stringResource(R.string.category_req))
         ChipsRow(categories, selected = category) { category = it }
-        Text("Goal", style = MaterialTheme.typography.labelLarge)
+        Text(stringResource(R.string.goal_label), style = MaterialTheme.typography.labelLarge)
         ChipsRow(SampleData.goals, selected = goal) { goal = it }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            FormField(price, { price = it.filter(Char::isDigit) }, "Price, so'm *", Modifier.weight(1f), number = true)
-            FormField(oldPrice, { oldPrice = it.filter(Char::isDigit) }, "Old price", Modifier.weight(1f), number = true)
+            FormField(price, { price = it.filter(Char::isDigit) }, stringResource(R.string.price_req), Modifier.weight(1f), number = true)
+            FormField(oldPrice, { oldPrice = it.filter(Char::isDigit) }, stringResource(R.string.old_price), Modifier.weight(1f), number = true)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            FormField(stock, { stock = it.filter(Char::isDigit) }, "Stock *", Modifier.weight(1f), number = true)
-            FormField(servings, { servings = it.filter(Char::isDigit) }, "Servings *", Modifier.weight(1f), number = true)
+            FormField(stock, { stock = it.filter(Char::isDigit) }, stringResource(R.string.stock_req), Modifier.weight(1f), number = true)
+            FormField(servings, { servings = it.filter(Char::isDigit) }, stringResource(R.string.servings_req), Modifier.weight(1f), number = true)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            FormField(weight, { weight = it }, "Size (2.27 kg)", Modifier.weight(1f))
-            FormField(protein, { protein = it.filter(Char::isDigit) }, "Protein g/serv.", Modifier.weight(1f), number = true)
+            FormField(weight, { weight = it }, stringResource(R.string.size_label), Modifier.weight(1f))
+            FormField(protein, { protein = it.filter(Char::isDigit) }, stringResource(R.string.protein_label), Modifier.weight(1f), number = true)
         }
-        FormField(flavor, { flavor = it }, "Flavour")
+        FormField(flavor, { flavor = it }, stringResource(R.string.flavour))
         OutlinedTextField(
             value = description, onValueChange = { description = it },
-            label = { Text("Description") }, minLines = 3,
+            label = { Text(stringResource(R.string.description)) }, minLines = 3,
             shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth()
         )
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
+        error?.let { Text(localizedError(it) ?: it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
         Button(
             onClick = { save() },
             enabled = !saving,
@@ -242,7 +247,7 @@ fun ProductEditScreen(vm: ShopViewModel, productId: Long, onDone: () -> Unit) {
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
             if (saving) CircularProgressIndicator(Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
-            else Text(if (isNew) "Add product" else "Save changes", fontSize = 16.sp)
+            else Text(if (isNew) stringResource(R.string.add_product) else stringResource(R.string.save_changes), fontSize = 16.sp)
         }
     }
 }
@@ -253,7 +258,7 @@ private fun ScreenHeader(title: String, subtitle: String, onBack: () -> Unit) {
         Surface(onClick = onBack, shape = CircleShape, color = MaterialTheme.colorScheme.surface,
             shadowElevation = 2.dp, modifier = Modifier.size(44.dp)) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
             }
         }
         Spacer(Modifier.width(12.dp))

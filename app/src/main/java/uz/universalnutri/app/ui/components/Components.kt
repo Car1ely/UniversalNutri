@@ -1,5 +1,7 @@
 package uz.universalnutri.app.ui.components
 
+import androidx.compose.ui.res.stringResource
+import uz.universalnutri.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -48,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uz.universalnutri.app.data.OrderStatus
 import uz.universalnutri.app.data.Product
+import uz.universalnutri.app.ui.statusLabel
 import uz.universalnutri.app.ui.theme.NutriSale
 import uz.universalnutri.app.ui.theme.NutriStar
 import uz.universalnutri.app.util.formatSom
@@ -139,7 +142,7 @@ fun FavoriteButton(isFavorite: Boolean, onClick: () -> Unit, modifier: Modifier 
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                contentDescription = if (isFavorite) "Remove from favourites" else "Add to favourites",
+                contentDescription = stringResource(if (isFavorite) R.string.fav_remove else R.string.fav_add),
                 tint = if (isFavorite) NutriSale else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(size * 0.55f)
             )
@@ -179,7 +182,7 @@ fun ProductCard(
             FavoriteButton(isFavorite, onFavorite, Modifier.align(Alignment.TopEnd).padding(12.dp), size = 32.dp)
             if (product.stock == 0) {
                 Text(
-                    "Sold out",
+                    stringResource(R.string.sold_out),
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 14.dp)
@@ -218,7 +221,7 @@ fun ProductCard(
                     modifier = Modifier.size(36.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add to cart",
+                        Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_to_cart),
                             tint = if (product.stock > 0) MaterialTheme.colorScheme.onSecondary
                             else MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -239,12 +242,12 @@ fun QuantityStepper(quantity: Int, onMinus: () -> Unit, onPlus: () -> Unit, plus
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onMinus, modifier = Modifier.size(36.dp)) {
-            Icon(Icons.Filled.Remove, contentDescription = "Less", modifier = Modifier.size(18.dp))
+            Icon(Icons.Filled.Remove, contentDescription = stringResource(R.string.less), modifier = Modifier.size(18.dp))
         }
         Text("$quantity", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center, modifier = Modifier.width(24.dp))
         IconButton(onClick = onPlus, enabled = plusEnabled, modifier = Modifier.size(36.dp)) {
-            Icon(Icons.Filled.Add, contentDescription = "More", modifier = Modifier.size(18.dp))
+            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.more), modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -301,7 +304,7 @@ fun OrderStatusChip(status: String) {
         else -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
     }
     Text(
-        status,
+        statusLabel(status),
         modifier = Modifier
             .clip(RoundedCornerShape(50))
             .background(bg)
@@ -319,7 +322,7 @@ fun StarPicker(rating: Int, onChange: (Int) -> Unit) {
             IconButton(onClick = { onChange(i) }, modifier = Modifier.size(40.dp)) {
                 Icon(
                     if (i <= rating) Icons.Filled.Star else Icons.Filled.StarBorder,
-                    contentDescription = "$i stars",
+                    contentDescription = stringResource(R.string.stars_fmt, i),
                     tint = NutriStar, modifier = Modifier.size(32.dp)
                 )
             }

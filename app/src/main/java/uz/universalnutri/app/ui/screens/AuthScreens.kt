@@ -1,5 +1,7 @@
 package uz.universalnutri.app.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import uz.universalnutri.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,6 +53,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uz.universalnutri.app.ui.ShopViewModel
+import uz.universalnutri.app.ui.goalLabel
+import uz.universalnutri.app.ui.localizedError
+import uz.universalnutri.app.ui.paymentLabel
 import uz.universalnutri.app.ui.theme.BrandGradient
 
 @Composable
@@ -60,10 +65,10 @@ fun LoginScreen(vm: ShopViewModel, onLoggedIn: () -> Unit, onRegisterClick: () -
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var loading by rememberSaveable { mutableStateOf(false) }
 
-    AuthLayout(title = "Welcome back 👋", subtitle = "Log in to continue your progress") {
-        AuthField(email, { email = it; error = null }, "E-mail", Icons.Filled.Email, KeyboardType.Email)
+    AuthLayout(title = stringResource(R.string.welcome_back), subtitle = stringResource(R.string.login_subtitle)) {
+        AuthField(email, { email = it; error = null }, stringResource(R.string.email), Icons.Filled.Email, KeyboardType.Email)
         PasswordField(password, { password = it; error = null })
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
+        error?.let { Text(localizedError(it) ?: it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
         Button(
             onClick = {
                 loading = true
@@ -78,12 +83,12 @@ fun LoginScreen(vm: ShopViewModel, onLoggedIn: () -> Unit, onRegisterClick: () -
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
             if (loading) CircularProgressIndicator(Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
-            else Text("Log in", fontSize = 16.sp)
+            else Text(stringResource(R.string.log_in), fontSize = 16.sp)
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically) {
-            Text("No account?", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            TextButton(onClick = onRegisterClick) { Text("Register", fontWeight = FontWeight.Bold) }
+            Text(stringResource(R.string.no_account), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            TextButton(onClick = onRegisterClick) { Text(stringResource(R.string.register), fontWeight = FontWeight.Bold) }
         }
     }
 }
@@ -96,11 +101,11 @@ fun RegisterScreen(vm: ShopViewModel, onRegistered: () -> Unit, onBack: () -> Un
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var loading by rememberSaveable { mutableStateOf(false) }
 
-    AuthLayout(title = "Create account", subtitle = "Takes 20 seconds — then -10% with NUTRI10") {
-        AuthField(name, { name = it; error = null }, "Full name", Icons.Filled.Person, KeyboardType.Text)
-        AuthField(email, { email = it; error = null }, "E-mail", Icons.Filled.Email, KeyboardType.Email)
-        PasswordField(password, { password = it; error = null }, label = "Password (min 6, 1 digit)")
-        error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
+    AuthLayout(title = stringResource(R.string.create_account), subtitle = stringResource(R.string.register_subtitle)) {
+        AuthField(name, { name = it; error = null }, stringResource(R.string.full_name), Icons.Filled.Person, KeyboardType.Text)
+        AuthField(email, { email = it; error = null }, stringResource(R.string.email), Icons.Filled.Email, KeyboardType.Email)
+        PasswordField(password, { password = it; error = null }, label = stringResource(R.string.password_rules))
+        error?.let { Text(localizedError(it) ?: it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium) }
         Button(
             onClick = {
                 loading = true
@@ -115,10 +120,10 @@ fun RegisterScreen(vm: ShopViewModel, onRegistered: () -> Unit, onBack: () -> Un
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
             if (loading) CircularProgressIndicator(Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
-            else Text("Create account", fontSize = 16.sp)
+            else Text(stringResource(R.string.create_account), fontSize = 16.sp)
         }
         TextButton(onClick = onBack, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Text("I already have an account")
+            Text(stringResource(R.string.have_account))
         }
     }
 }
@@ -144,8 +149,8 @@ private fun AuthLayout(title: String, subtitle: String, content: @Composable Col
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Logo(size = 76)
                 Spacer(Modifier.height(14.dp))
-                Text("UniversalNutri", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Black)
-                Text("Sports nutrition · Tashkent", color = Color.White.copy(alpha = 0.85f),
+                Text(stringResource(R.string.app_name), color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Black)
+                Text(stringResource(R.string.brand_tagline), color = Color.White.copy(alpha = 0.85f),
                     style = MaterialTheme.typography.bodyMedium)
             }
         }
@@ -193,7 +198,7 @@ private fun AuthField(
 }
 
 @Composable
-private fun PasswordField(value: String, onChange: (String) -> Unit, label: String = "Password") {
+private fun PasswordField(value: String, onChange: (String) -> Unit, label: String = stringResource(R.string.password)) {
     var visible by rememberSaveable { mutableStateOf(false) }
     OutlinedTextField(
         value = value, onValueChange = onChange,
@@ -202,7 +207,7 @@ private fun PasswordField(value: String, onChange: (String) -> Unit, label: Stri
         trailingIcon = {
             IconButton(onClick = { visible = !visible }) {
                 Icon(if (visible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                    contentDescription = if (visible) "Hide password" else "Show password")
+                    contentDescription = if (visible) stringResource(R.string.hide_password) else stringResource(R.string.show_password))
             }
         },
         singleLine = true,

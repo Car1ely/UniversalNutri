@@ -1,3 +1,207 @@
 <resources>
-    <string name="app_name">UniversalNutri</string>
+    <string name="app_name" translatable="false">UniversalNutri</string>
+
+    <!-- common -->
+    <string name="tab_shop">Shop</string>
+    <string name="tab_saved">Saved</string>
+    <string name="tab_cart">Cart</string>
+    <string name="tab_profile">Profile</string>
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="edit">Edit</string>
+    <string name="apply">Apply</string>
+    <string name="remove">Remove</string>
+    <string name="clear">Clear</string>
+    <string name="open_cart">Open cart</string>
+    <string name="free">Free</string>
+    <string name="subtotal">Subtotal</string>
+    <string name="delivery">Delivery</string>
+    <string name="total">Total</string>
+    <string name="discount_fmt">Discount %1$s</string>
+    <string name="order_number">Order #%1$d</string>
+    <string name="sold_out">Sold out</string>
+    <string name="add_to_cart">Add to cart</string>
+    <string name="added_to_cart">%1$s added to cart</string>
+    <string name="fav_add">Add to favourites</string>
+    <string name="fav_remove">Remove from favourites</string>
+    <string name="less">Less</string>
+    <string name="more">More</string>
+    <string name="stars_fmt">%1$d stars</string>
+    <string name="status_new">New</string>
+    <string name="status_delivered">Delivered</string>
+    <string name="status_cancelled">Cancelled</string>
+    <string name="pay_cash">Cash</string>
+    <string name="pay_card">Card</string>
+
+    <!-- auth -->
+    <string name="brand_tagline">Sports nutrition · Tashkent</string>
+    <string name="welcome_back">Welcome back 👋</string>
+    <string name="login_subtitle">Log in to continue your progress</string>
+    <string name="email">E-mail</string>
+    <string name="password">Password</string>
+    <string name="password_rules">Password (min 6, 1 digit)</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="log_in">Log in</string>
+    <string name="no_account">No account?</string>
+    <string name="register">Register</string>
+    <string name="create_account">Create account</string>
+    <string name="register_subtitle">Takes 20 seconds — then −10% with NUTRI10</string>
+    <string name="full_name">Full name</string>
+    <string name="have_account">I already have an account</string>
+
+    <!-- home -->
+    <string name="hello">Salom, %1$s! 👋</string>
+    <string name="athlete">athlete</string>
+    <string name="fuel_goals">Fuel your goals</string>
+    <string name="search_hint">Search protein, creatine, brand…</string>
+    <string name="new_member">NEW MEMBER OFFER</string>
+    <string name="first_order_offer">−10% on your first order</string>
+    <string name="free_delivery_from">Free delivery\nfrom 500 000</string>
+    <string name="your_goal">YOUR GOAL</string>
+    <string name="goal_muscle">Muscle gain</string>
+    <string name="goal_muscle_hint">Mass &amp; strength</string>
+    <string name="goal_loss">Weight loss</string>
+    <string name="goal_loss_hint">Lean &amp; dry</string>
+    <string name="goal_endurance">Endurance</string>
+    <string name="goal_endurance_hint">Run longer</string>
+    <string name="goal_health">Health</string>
+    <string name="goal_health_hint">Every day</string>
+    <string name="all">All</string>
+    <string name="results">Results</string>
+    <string name="popular_now">Popular now</string>
+    <string name="items_count">%1$d items</string>
+    <string name="nothing_found">Nothing found</string>
+    <string name="try_another">Try another word or reset filters</string>
+
+    <!-- detail -->
+    <string name="added_qty">%1$d × %2$s added</string>
+    <string name="add_price">Add · %1$s</string>
+    <string name="only_left">Only %1$d left</string>
+    <string name="in_stock">In stock</string>
+    <string name="fact_protein">protein</string>
+    <string name="fact_servings">servings</string>
+    <string name="fact_size">size</string>
+    <string name="fact_per_serving">so\'m / serv.</string>
+    <string name="flavour_label">FLAVOUR</string>
+    <string name="about_label">ABOUT</string>
+    <string name="delivery_info">Delivery across Tashkent in 2–4 hours. Free from %1$s.</string>
+    <string name="reviews_count">REVIEWS · %1$d</string>
+    <string name="write_review">Write a review</string>
+    <string name="no_reviews">No reviews from our customers yet — be the first!</string>
+    <string name="review_thanks">Thanks for your review!</string>
+    <string name="rate_fmt">Rate %1$s</string>
+    <string name="review_hint">Taste, mixability, results…</string>
+    <string name="publish">Publish</string>
+    <string name="similar_label">YOU MAY ALSO LIKE</string>
+
+    <!-- favourites -->
+    <string name="favourites_title">Favourites</string>
+    <string name="saved_count">%1$d saved products</string>
+    <string name="fav_empty_title">No favourites yet</string>
+    <string name="fav_empty_text">Tap the heart on a product to save it here.</string>
+    <string name="browse_products">Browse products</string>
+
+    <!-- cart -->
+    <string name="cart_empty_title">Your cart is empty</string>
+    <string name="cart_empty_text">Add some protein and let\'s go!</string>
+    <string name="go_shopping">Go shopping</string>
+    <string name="my_cart">My cart</string>
+    <string name="promo_section">PROMO CODE</string>
+    <string name="promo_applied">%1$s applied · −%2$s</string>
+    <string name="remove_promo">Remove promo code</string>
+    <string name="delivery_section">DELIVERY</string>
+    <string name="address">Address</string>
+    <string name="address_hint">Tashkent, Yunusobod 4, house 12</string>
+    <string name="phone">Phone</string>
+    <string name="phone_format">Format: +998 90 123 45 67</string>
+    <string name="payment_section">PAYMENT</string>
+    <string name="free_delivery_left">Add %1$s more for free delivery</string>
+    <string name="place_order">Place order · %1$s</string>
+    <string name="fill_address_phone">Enter the address and a valid phone to continue</string>
+    <string name="sold_out_remove">Sold out — remove it</string>
+    <string name="only_in_stock">Only %1$d in stock</string>
+
+    <!-- order success -->
+    <string name="order_placed">Order placed!</string>
+    <string name="courier_call">Thank you! Our courier will call you before delivery.</string>
+    <string name="total_payment">Total · %1$s</string>
+    <string name="my_orders">My orders</string>
+    <string name="continue_shopping">Continue shopping</string>
+
+    <!-- order details -->
+    <string name="items_label">ITEMS</string>
+    <string name="cancel_order">Cancel order</string>
+    <string name="cancel_order_q">Cancel order #%1$d?</string>
+    <string name="cancel_order_text">The products will go back to the store. This cannot be undone.</string>
+    <string name="keep_it">Keep it</string>
+    <string name="order_cancelled">Order cancelled</string>
+    <string name="received_order">I received the order</string>
+    <string name="enjoy_order">Thank you! Enjoy your order 💪</string>
+    <string name="buy_again">Buy again</string>
+    <string name="added_items">%1$d item(s) added to cart</string>
+    <string name="out_of_stock_now">These products are out of stock right now</string>
+    <string name="step_placed">Placed</string>
+    <string name="step_on_way">On the way</string>
+    <string name="step_delivered">Delivered</string>
+    <string name="step_cancelled">Cancelled</string>
+
+    <!-- profile -->
+    <string name="member_since">Member since %1$s</string>
+    <string name="log_out">Log out</string>
+    <string name="stat_orders">orders</string>
+    <string name="stat_spent">so\'m spent</string>
+    <string name="stat_favourites">favourites</string>
+    <string name="admin_panel">Admin panel</string>
+    <string name="admin_panel_hint">Add and edit products, prices and stock</string>
+    <string name="order_history">ORDER HISTORY</string>
+    <string name="no_orders">No orders yet</string>
+    <string name="no_orders_text">Your orders will appear here</string>
+    <string name="language">LANGUAGE</string>
+
+    <!-- admin -->
+    <string name="new_product">New product</string>
+    <string name="edit_product">Edit product</string>
+    <string name="products_summary">%1$d products · %2$d sold out</string>
+    <string name="pcs">%1$d pcs</string>
+    <string name="fill_card">Fill in the card</string>
+    <string name="emoji_label">Emoji (picture)</string>
+    <string name="name_req">Name *</string>
+    <string name="brand_req">Brand *</string>
+    <string name="category_req">Category *</string>
+    <string name="goal_label">Goal</string>
+    <string name="price_req">Price, so\'m *</string>
+    <string name="old_price">Old price</string>
+    <string name="stock_req">Stock *</string>
+    <string name="servings_req">Servings *</string>
+    <string name="size_label">Size (2.27 kg)</string>
+    <string name="protein_label">Protein g/serv.</string>
+    <string name="flavour">Flavour</string>
+    <string name="description">Description</string>
+    <string name="add_product">Add product</string>
+    <string name="save_changes">Save changes</string>
+
+    <!-- errors (the data layer reports them in English, UiText.kt translates them) -->
+    <string name="err_wrong_login">Wrong e-mail or password</string>
+    <string name="err_enter_name">Enter your name</string>
+    <string name="err_invalid_email">Invalid e-mail</string>
+    <string name="err_password_rules">Password: min 6 characters and 1 digit</string>
+    <string name="err_email_taken">This e-mail is already registered</string>
+    <string name="err_unknown_promo">Unknown promo code</string>
+    <string name="err_promo_min">%1$s works from %2$s</string>
+    <string name="err_cart_empty">Cart is empty</string>
+    <string name="err_login_first">Please log in first</string>
+    <string name="err_out_of_stock">Not enough \"%1$s\" in stock</string>
+    <string name="err_review_stars">Choose from 1 to 5 stars</string>
+    <string name="err_review_short">Write at least a few words</string>
+    <string name="err_already_reviewed">You have already reviewed this product</string>
+    <string name="err_only_admin">Only administrators can edit products</string>
+    <string name="err_order_not_found">Order not found</string>
+    <string name="err_order_closed">This order is already closed</string>
+    <string name="err_product_text">Name, brand and category are required</string>
+    <string name="err_product_price">Price must be a positive number</string>
+    <string name="err_product_old_price">Old price must be higher than the price (or empty)</string>
+    <string name="err_product_stock">Stock must be 0 or more</string>
+    <string name="err_product_servings">Servings must be a positive number</string>
+    <string name="err_old_price_number">Old price must be a number</string>
 </resources>

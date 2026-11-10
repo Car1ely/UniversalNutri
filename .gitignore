@@ -11,3 +11,4 @@
 *.jks
 *.keystore
 *.zip
+keystore.properties
