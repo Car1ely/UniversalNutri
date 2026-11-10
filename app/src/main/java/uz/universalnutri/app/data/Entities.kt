@@ -15,6 +15,7 @@ data class User(
     val fullName: String,
     val email: String,
     val passwordHash: String,           // never store the plain password!
+    val isAdmin: Boolean = false,       // admins can add and edit products
     val createdAt: Long = System.currentTimeMillis()
 )
 
@@ -91,7 +92,7 @@ data class Order(
     val phone: String,
     val paymentMethod: String,
     val promoCode: String? = null,
-    val status: String = "NEW",
+    val status: String = OrderStatus.NEW,
     val createdAt: Long = System.currentTimeMillis()
 )
 
@@ -109,6 +110,33 @@ data class OrderItem(
     val emoji: String,
     val quantity: Int,
     val unitPrice: Long                 // copied: price at the moment of the order
+)
+
+/** Order life cycle: NEW -> DELIVERED, or NEW -> CANCELLED (the stock is returned). */
+object OrderStatus {
+    const val NEW = "NEW"
+    const val DELIVERED = "DELIVERED"
+    const val CANCELLED = "CANCELLED"
+}
+
+@Entity(
+    tableName = "reviews",
+    primaryKeys = ["userId", "productId"],          // one review per user per product
+    foreignKeys = [
+        ForeignKey(entity = User::class, parentColumns = ["id"], childColumns = ["userId"],
+            onDelete = ForeignKey.CASCADE),
+        ForeignKey(entity = Product::class, parentColumns = ["id"], childColumns = ["productId"],
+            onDelete = ForeignKey.CASCADE)
+    ],
+    indices = [Index("productId")]
+)
+data class Review(
+    val userId: Long,
+    val productId: Long,
+    val authorName: String,
+    val rating: Int,                    // 1..5 stars
+    val text: String,
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 // ---------- not tables: results of JOIN / @Relation queries ----------

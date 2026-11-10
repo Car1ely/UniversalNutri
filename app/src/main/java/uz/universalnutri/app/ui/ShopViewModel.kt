@@ -21,6 +21,7 @@ import uz.universalnutri.app.UniversalNutriApp
 import uz.universalnutri.app.data.CartLine
 import uz.universalnutri.app.data.OrderWithItems
 import uz.universalnutri.app.data.Product
+import uz.universalnutri.app.data.Review
 import uz.universalnutri.app.data.ShopRepository
 import uz.universalnutri.app.data.User
 import uz.universalnutri.app.util.Pricing
@@ -82,6 +83,30 @@ class ShopViewModel(private val repo: ShopRepository) : ViewModel() {
 
     fun product(id: Long): Flow<Product?> = repo.product(id)
     fun order(id: Long): Flow<OrderWithItems?> = repo.order(id)
+    fun similar(product: Product): Flow<List<Product>> = repo.similar(product)
+    fun reviews(productId: Long): Flow<List<Review>> = repo.reviews(productId)
+
+    /** Whole catalogue for the admin screen (no filters). */
+    val allProducts: StateFlow<List<Product>> = repo.products("", null, null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    // helper: run a suspend action, report null (OK) or the error text
+    private fun act(onResult: (String?) -> Unit, block: suspend () -> Unit) = viewModelScope.launch {
+        onResult(runCatching { block() }.exceptionOrNull()?.message)
+    }
+
+    fun addReview(productId: Long, rating: Int, text: String, onResult: (String?) -> Unit) =
+        act(onResult) { repo.addReview(productId, rating, text) }
+
+    fun cancelOrder(orderId: Long, onResult: (String?) -> Unit) = act(onResult) { repo.cancelOrder(orderId) }
+    fun markDelivered(orderId: Long, onResult: (String?) -> Unit) = act(onResult) { repo.markDelivered(orderId) }
+
+    /** onResult(number of units put back into the cart) */
+    fun repeatOrder(orderId: Long, onResult: (Int) -> Unit) = viewModelScope.launch {
+        onResult(runCatching { repo.repeatOrder(orderId) }.getOrDefault(0))
+    }
+
+    fun saveProduct(product: Product, onResult: (String?) -> Unit) = act(onResult) { repo.saveProduct(product) }
 
     // onResult(null) = success, onResult("text") = error message to show
     fun login(email: String, password: String, onResult: (String?) -> Unit) = viewModelScope.launch {

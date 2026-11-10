@@ -19,6 +19,15 @@ class ShopRepository(
     // ---------- start-up ----------
     suspend fun seedIfEmpty() {
         if (db.productDao().count() == 0) db.productDao().insertAll(SampleData.products)
+        // demo administrator account (see README) - only created once
+        if (db.userDao().findByEmail(SampleData.ADMIN_EMAIL) == null) {
+            db.userDao().insert(
+                User(
+                    fullName = "Store Admin", email = SampleData.ADMIN_EMAIL, isAdmin = true,
+                    passwordHash = Security.hashPassword(SampleData.ADMIN_PASSWORD, SampleData.ADMIN_EMAIL)
+                )
+            )
+        }
     }
 
     suspend fun restoreSession() {
@@ -70,6 +79,27 @@ class ShopRepository(
 
     fun categories(): Flow<List<String>> = db.productDao().categories()
     fun product(id: Long): Flow<Product?> = db.productDao().observe(id)
+    fun similar(product: Product): Flow<List<Product>> =
+        db.productDao().similar(product.category, product.id, limit = 6)
+
+    // ---------- admin ----------
+    /** Insert (id == 0) or update a product. Only admins may do this. */
+    suspend fun saveProduct(product: Product): Long {
+        check(currentUser.value?.isAdmin == true) { "Only administrators can edit products" }
+        return if (product.id == 0L) db.productDao().insert(product)
+        else { db.productDao().update(product); product.id }
+    }
+
+    // ---------- reviews ----------
+    fun reviews(productId: Long): Flow<List<Review>> = db.reviewDao().observe(productId)
+
+    suspend fun addReview(productId: Long, rating: Int, text: String) {
+        val user = currentUser.value ?: throw IllegalStateException("Please log in first")
+        require(rating in 1..5) { "Choose from 1 to 5 stars" }
+        require(text.trim().length >= 3) { "Write at least a few words" }
+        check(!db.reviewDao().exists(user.id, productId)) { "You have already reviewed this product" }
+        db.reviewDao().add(Review(user.id, productId, user.fullName, rating, text.trim()))
+    }
 
     // ---------- favourites ----------
     fun favoriteIds(userId: Long): Flow<List<Long>> = db.favoriteDao().observeIds(userId)
@@ -85,10 +115,15 @@ class ShopRepository(
     // ---------- cart ----------
     fun cart(userId: Long): Flow<List<CartLine>> = db.cartDao().observeCart(userId)
 
-    suspend fun addToCart(productId: Long, quantity: Int = 1) {
+    /** Adds to the cart but never more than is in stock. Returns how many were really added. */
+    suspend fun addToCart(productId: Long, quantity: Int = 1): Int {
         val userId = requireUserId()
-        val existing = db.cartDao().find(userId, productId)
-        db.cartDao().upsert(CartItem(userId, productId, (existing?.quantity ?: 0) + quantity))
+        val stock = db.productDao().stock(productId) ?: return 0
+        val inCart = db.cartDao().find(userId, productId)?.quantity ?: 0
+        val newQty = (inCart + quantity).coerceAtMost(stock)
+        if (newQty <= inCart) return 0
+        db.cartDao().upsert(CartItem(userId, productId, newQty))
+        return newQty - inCart
     }
 
     suspend fun setQuantity(productId: Long, quantity: Int) {
@@ -103,6 +138,13 @@ class ShopRepository(
 
     suspend fun checkout(address: String, phone: String, paymentMethod: String, promoCode: String?): Long =
         db.orderDao().placeOrder(requireUserId(), address.trim(), phone.trim(), paymentMethod, promoCode)
+
+    suspend fun cancelOrder(orderId: Long) = db.orderDao().cancelOrder(requireUserId(), orderId)
+    suspend fun markDelivered(orderId: Long) = db.orderDao().markDelivered(requireUserId(), orderId)
+
+    /** "Buy again": puts the items of an old order back into the cart. Returns how many units were added. */
+    suspend fun repeatOrder(orderId: Long): Int =
+        db.orderDao().itemsOf(orderId).sumOf { addToCart(it.productId, it.quantity) }
 
     private fun requireUserId(): Long =
         currentUser.value?.id ?: throw IllegalStateException("Please log in first")

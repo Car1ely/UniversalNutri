@@ -86,4 +86,22 @@ class BusinessRulesTest {
     @Test fun unknownPromo_isRejected() {
         assertEquals("Unknown promo code", Pricing.checkPromo("FREE100", 2_000_000))
     }
+
+    @Test fun adminProductForm_acceptsValidProduct() {
+        assertNull(Validators.productError("Whey", "ON", "Protein", 500_000, 600_000, 10, 30))
+        assertNull(Validators.productError("Whey", "ON", "Protein", 500_000, null, 0, 30))   // stock 0 = sold out, OK
+    }
+
+    @Test fun adminProductForm_rejectsBadNumbers() {
+        assertNotNull(Validators.productError("Whey", "ON", "Protein", null, null, 10, 30))
+        assertNotNull(Validators.productError("Whey", "ON", "Protein", 0, null, 10, 30))
+        assertNotNull(Validators.productError("Whey", "ON", "Protein", 500_000, 400_000, 10, 30)) // old < new
+        assertNotNull(Validators.productError("Whey", "ON", "Protein", 500_000, null, -1, 30))
+        assertNotNull(Validators.productError("Whey", "ON", "Protein", 500_000, null, 10, 0))
+    }
+
+    @Test fun adminProductForm_requiresText() {
+        assertNotNull(Validators.productError(" ", "ON", "Protein", 500_000, null, 10, 30))
+        assertNotNull(Validators.productError("Whey", "", "Protein", 500_000, null, 10, 30))
+    }
 }

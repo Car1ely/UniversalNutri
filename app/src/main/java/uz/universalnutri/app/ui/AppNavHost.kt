@@ -40,7 +40,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import uz.universalnutri.app.ui.screens.AdminScreen
 import uz.universalnutri.app.ui.screens.CartScreen
+import uz.universalnutri.app.ui.screens.OrderDetailScreen
+import uz.universalnutri.app.ui.screens.ProductEditScreen
 import uz.universalnutri.app.ui.screens.DetailScreen
 import uz.universalnutri.app.ui.screens.FavoritesScreen
 import uz.universalnutri.app.ui.screens.HomeScreen
@@ -60,8 +63,13 @@ object Routes {
     const val PROFILE = "profile"
     const val DETAIL = "detail/{productId}"
     const val SUCCESS = "success/{orderId}"
+    const val ORDER = "order/{orderId}"
+    const val ADMIN = "admin"
+    const val ADMIN_EDIT = "admin/edit/{productId}"     // productId 0 = new product
     fun detail(id: Long) = "detail/$id"
     fun success(id: Long) = "success/$id"
+    fun order(id: Long) = "order/$id"
+    fun adminEdit(id: Long) = "admin/edit/$id"
 }
 
 private data class Tab(val route: String, val label: String, val icon: ImageVector)
@@ -152,7 +160,8 @@ fun AppNavHost(vm: ShopViewModel) {
             ) { entry ->
                 DetailScreen(vm, productId = entry.arguments?.getLong("productId") ?: 0L,
                     onBack = { nav.popBackStack() },
-                    onOpenCart = { nav.navigateToTab(Routes.CART) })
+                    onOpenCart = { nav.navigateToTab(Routes.CART) },
+                    onProductClick = { id -> nav.navigate(Routes.detail(id)) })
             }
             composable(Routes.CART) {
                 CartScreen(vm,
@@ -170,7 +179,30 @@ fun AppNavHost(vm: ShopViewModel) {
             composable(Routes.PROFILE) {
                 ProfileScreen(vm,
                     onLoggedOut = { nav.navigate(Routes.LOGIN) { popUpTo(0) { inclusive = true } } },
-                    onOpenFavorites = { nav.navigateToTab(Routes.FAVORITES) })
+                    onOpenFavorites = { nav.navigateToTab(Routes.FAVORITES) },
+                    onOrderClick = { id -> nav.navigate(Routes.order(id)) },
+                    onOpenAdmin = { nav.navigate(Routes.ADMIN) })
+            }
+            composable(
+                Routes.ORDER,
+                arguments = listOf(navArgument("orderId") { type = NavType.LongType })
+            ) { entry ->
+                OrderDetailScreen(vm, orderId = entry.arguments?.getLong("orderId") ?: 0L,
+                    onBack = { nav.popBackStack() },
+                    onProductClick = { id -> nav.navigate(Routes.detail(id)) },
+                    onOpenCart = { nav.navigateToTab(Routes.CART) })
+            }
+            composable(Routes.ADMIN) {
+                AdminScreen(vm,
+                    onBack = { nav.popBackStack() },
+                    onEdit = { id -> nav.navigate(Routes.adminEdit(id)) })
+            }
+            composable(
+                Routes.ADMIN_EDIT,
+                arguments = listOf(navArgument("productId") { type = NavType.LongType })
+            ) { entry ->
+                ProductEditScreen(vm, productId = entry.arguments?.getLong("productId") ?: 0L,
+                    onDone = { nav.popBackStack() })
             }
         }
     }

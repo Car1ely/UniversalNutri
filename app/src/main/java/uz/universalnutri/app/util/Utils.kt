@@ -21,6 +21,19 @@ object Validators {
 
     /** Uzbek mobile number: +998 90 123 45 67 (spaces and dashes are allowed). */
     fun isValidPhone(phone: String) = phoneRegex.matches(phone.replace(" ", "").replace("-", ""))
+
+    /** Admin product form. null = OK, otherwise the error message to show. */
+    fun productError(
+        name: String, brand: String, category: String,
+        price: Long?, oldPrice: Long?, stock: Int?, servings: Int?
+    ): String? = when {
+        name.isBlank() || brand.isBlank() || category.isBlank() -> "Name, brand and category are required"
+        price == null || price <= 0 -> "Price must be a positive number"
+        oldPrice != null && oldPrice <= price -> "Old price must be higher than the price (or empty)"
+        stock == null || stock < 0 -> "Stock must be 0 or more"
+        servings == null || servings <= 0 -> "Servings must be a positive number"
+        else -> null
+    }
 }
 
 object Security {

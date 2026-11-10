@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import uz.universalnutri.app.util.Pricing
@@ -23,6 +24,9 @@ interface UserDao {
 
     @Query("SELECT * FROM users WHERE id = :id")
     suspend fun findById(id: Long): User?
+
+    @Update
+    suspend fun update(user: User)
 }
 
 @Dao
@@ -42,11 +46,26 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE id = :id")
     fun observe(id: Long): Flow<Product?>
 
+    @Query(
+        """SELECT * FROM products WHERE category = :category AND id != :excludeId
+           ORDER BY (stock > 0) DESC, rating DESC LIMIT :limit"""
+    )
+    fun similar(category: String, excludeId: Long, limit: Int): Flow<List<Product>>
+
+    @Query("SELECT stock FROM products WHERE id = :id")
+    suspend fun stock(id: Long): Int?
+
     @Query("SELECT COUNT(*) FROM products")
     suspend fun count(): Int
 
     @Insert
     suspend fun insertAll(products: List<Product>)
+
+    @Insert
+    suspend fun insert(product: Product): Long
+
+    @Update
+    suspend fun update(product: Product)
 }
 
 @Dao
@@ -88,6 +107,34 @@ interface FavoriteDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM favorites WHERE userId = :userId AND productId = :productId)")
     suspend fun exists(userId: Long, productId: Long): Boolean
+}
+
+@Dao
+abstract class ReviewDao {
+    @Query("SELECT * FROM reviews WHERE productId = :productId ORDER BY createdAt DESC")
+    abstract fun observe(productId: Long): Flow<List<Review>>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM reviews WHERE userId = :userId AND productId = :productId)")
+    abstract suspend fun exists(userId: Long, productId: Long): Boolean
+
+    @Insert
+    protected abstract suspend fun insert(review: Review)
+
+    // new average = (old average * old count + new stars) / (old count + 1)
+    @Query(
+        """UPDATE products
+           SET rating = ROUND((rating * reviews + :stars) * 1.0 / (reviews + 1), 1),
+               reviews = reviews + 1
+           WHERE id = :productId"""
+    )
+    protected abstract suspend fun addToRating(productId: Long, stars: Int)
+
+    /** Saves the review and recalculates the product rating in ONE transaction. */
+    @Transaction
+    open suspend fun add(review: Review) {
+        insert(review)
+        addToRating(review.productId, review.rating)
+    }
 }
 
 class OutOfStockException(productName: String) : Exception("Not enough \"$productName\" in stock")
@@ -150,5 +197,39 @@ abstract class OrderDao {
         })
         clearCart(userId)
         return orderId
+    }
+
+    // ---------- after checkout ----------
+    @Query("SELECT * FROM orders WHERE id = :orderId")
+    protected abstract suspend fun findOrder(orderId: Long): Order?
+
+    @Query("SELECT * FROM order_items WHERE orderId = :orderId")
+    abstract suspend fun itemsOf(orderId: Long): List<OrderItem>
+
+    @Query("UPDATE products SET stock = stock + :qty WHERE id = :productId")
+    protected abstract suspend fun increaseStock(productId: Long, qty: Int)
+
+    @Query("UPDATE orders SET status = :status WHERE id = :orderId")
+    protected abstract suspend fun setStatus(orderId: Long, status: String)
+
+    private suspend fun requireNewOrder(userId: Long, orderId: Long) {
+        val order = findOrder(orderId)
+        if (order == null || order.userId != userId) throw IllegalArgumentException("Order not found")
+        check(order.status == OrderStatus.NEW) { "This order is already ${order.status.lowercase()}" }
+    }
+
+    /** Cancel: the goods go back to the warehouse and the status becomes CANCELLED. */
+    @Transaction
+    open suspend fun cancelOrder(userId: Long, orderId: Long) {
+        requireNewOrder(userId, orderId)
+        for (item in itemsOf(orderId)) increaseStock(item.productId, item.quantity)
+        setStatus(orderId, OrderStatus.CANCELLED)
+    }
+
+    /** The customer confirms that the courier delivered the order. */
+    @Transaction
+    open suspend fun markDelivered(userId: Long, orderId: Long) {
+        requireNewOrder(userId, orderId)
+        setStatus(orderId, OrderStatus.DELIVERED)
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,16 +38,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import uz.universalnutri.app.data.OrderStatus
 import uz.universalnutri.app.data.OrderWithItems
 import uz.universalnutri.app.ui.ShopViewModel
 import uz.universalnutri.app.ui.components.InfoTile
+import uz.universalnutri.app.ui.components.OrderStatusChip
 import uz.universalnutri.app.ui.theme.BrandGradient
 import uz.universalnutri.app.ui.theme.SectionLabel
 import uz.universalnutri.app.util.formatDate
 import uz.universalnutri.app.util.formatSom
 
 @Composable
-fun ProfileScreen(vm: ShopViewModel, onLoggedOut: () -> Unit, onOpenFavorites: () -> Unit) {
+fun ProfileScreen(
+    vm: ShopViewModel,
+    onLoggedOut: () -> Unit,
+    onOpenFavorites: () -> Unit,
+    onOrderClick: (Long) -> Unit,
+    onOpenAdmin: () -> Unit
+) {
     val orders by vm.orders.collectAsStateWithLifecycle()
     val user by vm.currentUser.collectAsStateWithLifecycle()
     val favorites by vm.favoriteIds.collectAsStateWithLifecycle()
@@ -88,8 +97,31 @@ fun ProfileScreen(vm: ShopViewModel, onLoggedOut: () -> Unit, onOpenFavorites: (
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 InfoTile("${orders.size}", "orders", Modifier.weight(1f))
-                InfoTile(formatSom(orders.sumOf { it.order.total }).removeSuffix(" so'm"), "so'm spent", Modifier.weight(1f))
+                val spent = orders.filter { it.order.status != OrderStatus.CANCELLED }.sumOf { it.order.total }
+                InfoTile(formatSom(spent).removeSuffix(" so'm"), "so'm spent", Modifier.weight(1f))
                 InfoTile("${favorites.size}", "favourites", Modifier.weight(1f), onClick = onOpenFavorites)
+            }
+        }
+        if (user?.isAdmin == true) {
+            item {
+                Surface(
+                    onClick = onOpenAdmin,
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.secondary
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.AdminPanelSettings, contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondary)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Admin panel", color = MaterialTheme.colorScheme.onSecondary,
+                                style = MaterialTheme.typography.titleMedium)
+                            Text("Add and edit products, prices and stock",
+                                color = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.7f),
+                                style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                }
             }
         }
         item {
@@ -107,13 +139,14 @@ fun ProfileScreen(vm: ShopViewModel, onLoggedOut: () -> Unit, onOpenFavorites: (
                 }
             }
         }
-        items(orders, key = { it.order.id }) { OrderCard(it) }
+        items(orders, key = { it.order.id }) { OrderCard(it, onClick = { onOrderClick(it.order.id) }) }
     }
 }
 
 @Composable
-private fun OrderCard(o: OrderWithItems) {
+private fun OrderCard(o: OrderWithItems, onClick: () -> Unit) {
     Surface(
+        onClick = onClick,
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surface,
         modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
@@ -125,7 +158,7 @@ private fun OrderCard(o: OrderWithItems) {
                     Text(formatDate(o.order.createdAt), style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                StatusChip(o.order.status)
+                OrderStatusChip(o.order.status)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 o.items.take(5).forEach { item ->
@@ -151,15 +184,3 @@ private fun OrderCard(o: OrderWithItems) {
     }
 }
 
-@Composable
-private fun StatusChip(status: String) {
-    Text(
-        status,
-        modifier = Modifier
-            .clip(RoundedCornerShape(50))
-            .background(MaterialTheme.colorScheme.tertiaryContainer)
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-        color = MaterialTheme.colorScheme.onTertiaryContainer,
-        style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold
-    )
-}

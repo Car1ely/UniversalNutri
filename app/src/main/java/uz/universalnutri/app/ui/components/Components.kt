@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import uz.universalnutri.app.data.OrderStatus
 import uz.universalnutri.app.data.Product
 import uz.universalnutri.app.ui.theme.NutriSale
 import uz.universalnutri.app.ui.theme.NutriStar
@@ -287,5 +289,40 @@ fun InfoTile(value: String, label: String, modifier: Modifier = Modifier, onClic
             maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** Coloured pill with the order status: NEW (orange), DELIVERED (green), CANCELLED (red). */
+@Composable
+fun OrderStatusChip(status: String) {
+    val (bg, fg) = when (status) {
+        OrderStatus.DELIVERED -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
+        OrderStatus.CANCELLED -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        else -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+    }
+    Text(
+        status,
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(bg)
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        color = fg,
+        style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold
+    )
+}
+
+/** Row of 5 tappable stars (for writing a review). */
+@Composable
+fun StarPicker(rating: Int, onChange: (Int) -> Unit) {
+    Row {
+        for (i in 1..5) {
+            IconButton(onClick = { onChange(i) }, modifier = Modifier.size(40.dp)) {
+                Icon(
+                    if (i <= rating) Icons.Filled.Star else Icons.Filled.StarBorder,
+                    contentDescription = "$i stars",
+                    tint = NutriStar, modifier = Modifier.size(32.dp)
+                )
+            }
+        }
     }
 }

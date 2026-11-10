@@ -1,6 +1,8 @@
 package uz.universalnutri.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,9 +24,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -44,11 +51,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import uz.universalnutri.app.data.Product
+import uz.universalnutri.app.data.Review
 import uz.universalnutri.app.ui.ShopViewModel
+import uz.universalnutri.app.ui.components.StarPicker
+import uz.universalnutri.app.ui.theme.NutriStar
+import uz.universalnutri.app.util.formatDate
 import uz.universalnutri.app.ui.components.FavoriteButton
 import uz.universalnutri.app.ui.components.InfoTile
 import uz.universalnutri.app.ui.components.PriceTag
@@ -61,9 +74,18 @@ import uz.universalnutri.app.util.Pricing
 import uz.universalnutri.app.util.formatSom
 
 @Composable
-fun DetailScreen(vm: ShopViewModel, productId: Long, onBack: () -> Unit, onOpenCart: () -> Unit) {
+fun DetailScreen(
+    vm: ShopViewModel,
+    productId: Long,
+    onBack: () -> Unit,
+    onOpenCart: () -> Unit,
+    onProductClick: (Long) -> Unit
+) {
     val product by remember(productId) { vm.product(productId) }.collectAsStateWithLifecycle(null)
+    val reviews by remember(productId) { vm.reviews(productId) }.collectAsStateWithLifecycle(emptyList())
+    val user by vm.currentUser.collectAsStateWithLifecycle()
     val favorites by vm.favoriteIds.collectAsStateWithLifecycle()
+    var writingReview by rememberSaveable { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var quantity by rememberSaveable { mutableIntStateOf(1) }
@@ -72,6 +94,24 @@ fun DetailScreen(vm: ShopViewModel, productId: Long, onBack: () -> Unit, onOpenC
     if (p == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         return
+    }
+    val similar by remember(p.id, p.category) { vm.similar(p) }.collectAsStateWithLifecycle(emptyList())
+    val alreadyReviewed = reviews.any { it.userId == user?.id }
+
+    if (writingReview) {
+        ReviewDialog(
+            productName = p.name,
+            onDismiss = { writingReview = false },
+            onSubmit = { stars, text, done ->
+                vm.addReview(p.id, stars, text) { err ->
+                    done(err)
+                    if (err == null) {
+                        writingReview = false
+                        scope.launch { snackbar.showSnackbar("Thanks for your review!") }
+                    }
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -204,9 +244,119 @@ fun DetailScreen(vm: ShopViewModel, productId: Long, onBack: () -> Unit, onOpenC
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
+
+                // ---------- reviews ----------
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
+                    Text("REVIEWS · ${reviews.size}", style = SectionLabel,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                    if (!alreadyReviewed) {
+                        TextButton(onClick = { writingReview = true }) {
+                            Icon(Icons.Filled.RateReview, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Write a review")
+                        }
+                    }
+                }
+                if (reviews.isEmpty()) {
+                    Text("No reviews from our customers yet — be the first!",
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                reviews.forEach { r -> ReviewCard(r) }
+
+                // ---------- similar products ----------
+                if (similar.isNotEmpty()) {
+                    Text("YOU MAY ALSO LIKE", style = SectionLabel, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 6.dp))
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        similar.forEach { s -> SimilarCard(s, onClick = { onProductClick(s.id) }) }
+                    }
+                }
             }
         }
     }
+}
+
+@Composable
+private fun ReviewCard(r: Review) {
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant).padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(r.authorName, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            Text(formatDate(r.createdAt).substringBefore(' '), style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Text("★".repeat(r.rating) + "☆".repeat(5 - r.rating), color = NutriStar, fontSize = 14.sp)
+        Text(r.text, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+private fun SimilarCard(p: Product, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.width(140.dp)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(18.dp))
+    ) {
+        Column {
+            ProductImage(p, Modifier.fillMaxWidth().height(96.dp).padding(5.dp).clip(RoundedCornerShape(14.dp)),
+                emojiSize = 40.sp)
+            Column(Modifier.padding(start = 10.dp, end = 10.dp, bottom = 10.dp)) {
+                Text(p.name, style = MaterialTheme.typography.labelLarge, maxLines = 2, minLines = 2,
+                    overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(4.dp))
+                PriceTag(p.price, p.oldPrice)
+            }
+        }
+    }
+}
+
+/** Dialog with 5 stars and a text field. onSubmit gets a callback to report the result (null = OK). */
+@Composable
+private fun ReviewDialog(
+    productName: String,
+    onDismiss: () -> Unit,
+    onSubmit: (stars: Int, text: String, done: (String?) -> Unit) -> Unit
+) {
+    var stars by rememberSaveable { mutableIntStateOf(5) }
+    var text by rememberSaveable { mutableStateOf("") }
+    var error by rememberSaveable { mutableStateOf<String?>(null) }
+    var sending by rememberSaveable { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rate $productName", maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        text = {
+            val err = error
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                StarPicker(stars) { stars = it }
+                OutlinedTextField(
+                    value = text, onValueChange = { text = it; error = null },
+                    placeholder = { Text("Taste, mixability, results…") },
+                    minLines = 3,
+                    isError = err != null,
+                    supportingText = if (err != null) { { Text(err) } } else null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = !sending && text.isNotBlank(),
+                onClick = {
+                    sending = true
+                    onSubmit(stars, text) { err -> sending = false; error = err }
+                }
+            ) { Text("Publish") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
 }
 
 @Composable

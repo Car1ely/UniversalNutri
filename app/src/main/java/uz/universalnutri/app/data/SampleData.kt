@@ -7,6 +7,13 @@ object SampleData {
     private const val ENDURANCE = "Endurance"
     private const val HEALTH = "Health"
 
+    /** Training goals a product can belong to (used by the admin form). */
+    val goals = listOf(MUSCLE, LOSS, ENDURANCE, HEALTH)
+
+    /** Demo administrator for the admin screen. Change it before a real release! */
+    const val ADMIN_EMAIL = "admin@universalnutri.uz"
+    const val ADMIN_PASSWORD = "admin2026"
+
     val products = listOf(
         Product(
             name = "Gold Standard 100% Whey", brand = "Optimum Nutrition", category = "Protein", goal = MUSCLE,
